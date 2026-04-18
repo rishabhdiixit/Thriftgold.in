@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThreadGold — Premium Thrift Fashion</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div id="navContainer"></div>
+  <div id="cartContainer"></div>
+  <div id="loginContainer"></div>
+  <div id="logoutContainer"></div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <main class="page-wrapper">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-grain"></div>
+      <div class="hero-content">
+        <span class="hero-tag">✦ India's Premium Thrift Destination</span>
+        <h1>Wear the<br><em>Story</em>,<br>Not the<br>Price Tag.</h1>
+        <p>Curated second-hand fashion from top brands — authenticated, affordable, and delivered across India.</p>
+        <div class="hero-cta">
+          <a href="pages/shop.html" class="btn btn-gold">Shop Now ↗</a>
+          <a href="pages/shop.html" class="btn btn-outline">Explore All</a>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <span class="hero-stat-num">2,400+</span>
+            <span class="hero-stat-label">Curated Pieces</span>
+          </div>
+          <div>
+            <span class="hero-stat-num">180+</span>
+            <span class="hero-stat-label">Premium Brands</span>
+          </div>
+          <div>
+            <span class="hero-stat-num">50k+</span>
+            <span class="hero-stat-label">Happy Customers</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee-section">
+      <div class="marquee-track" id="marqueeTrack"></div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-tag">✦ Browse by Category</div>
+          <h2 class="section-title">Shop Your<br>Style</h2>
+        </div>
+        <a href="pages/shop.html" class="btn btn-outline">All Categories</a>
+      </div>
+      <div class="category-grid" id="categoryGrid"></div>
+    </section>
+
+    <!-- FEATURED PRODUCTS -->
+    <section class="section" style="padding-top: 0;">
+      <div class="section-header">
+        <div>
+          <div class="section-tag">✦ Featured Picks</div>
+          <h2 class="section-title">This Week's<br>Best Finds</h2>
+        </div>
+        <a href="pages/shop.html" class="btn btn-outline">View All</a>
+      </div>
+      <div class="product-grid" id="featuredGrid"></div>
+    </section>
+
+    <!-- WHY US -->
+    <section class="section why-us-section" style="background: var(--dark); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="section-header" style="margin-bottom: 60px;">
+        <div>
+          <div class="section-tag">✦ Why ThreadGold</div>
+          <h2 class="section-title">Fashion That<br>Feels Good</h2>
+        </div>
+      </div>
+      <div class="why-us-grid">
+        <div class="why-us-item">
+          <div class="why-us-icon">🔍</div>
+          <h3 class="why-us-title">Authenticated</h3>
+          <p class="why-us-desc">Every item goes through our 12-point quality check before listing</p>
+        </div>
+        <div class="why-us-item">
+          <div class="why-us-icon">📦</div>
+          <h3 class="why-us-title">Pan India Delivery</h3>
+          <p class="why-us-desc">Free shipping on orders above ₹999, delivered in 4–7 days</p>
+        </div>
+        <div class="why-us-item">
+          <div class="why-us-icon">🔄</div>
+          <h3 class="why-us-title">Easy Returns</h3>
+          <p class="why-us-desc">7-day hassle-free return policy on all orders</p>
+        </div>
+        <div class="why-us-item">
+          <div class="why-us-icon">🌿</div>
+          <h3 class="why-us-title">Sustainable</h3>
+          <p class="why-us-desc">Every purchase reduces fashion waste and saves water</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA BANNER -->
+    <section class="cta-banner" style="padding: 100px 48px; background: var(--gold); text-align:center; position:relative; overflow:hidden;">
+      <div style="position:absolute;inset:0;opacity:0.05;background:repeating-linear-gradient(45deg,#000 0,#000 2px,transparent 0,transparent 50%);background-size:20px 20px;"></div>
+      <div style="position:relative;z-index:2;">
+        <h2 style="font-family:'Playfair Display',serif; font-size:clamp(36px,5vw,72px); font-weight:900; color:var(--black); margin-bottom:16px;">Find Your Perfect Fit</h2>
+        <p style="color:rgba(0,0,0,0.6); font-size:16px; margin-bottom:36px; max-width:480px; margin-left:auto; margin-right:auto;">Unique finds, perfect fits—because your style deserves something different..</p>
+        <a href="pages/shop.html" class="btn btn-dark">Start Shoping</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo" style="font-size:22px;">Thread<span>Gold</span></div>
+        <p>India's most curated thrift fashion destination — where every piece has a story worth wearing.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Shop</div>
+        <a href="pages/shop.html">All Products</a>
+        <a href="pages/shop.html">New Arrivals</a>
+        <a href="pages/shop.html">Premium Picks</a>
+        <a href="pages/shop.html">Sale</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <a href="pages/orders.html">My Orders</a>
+        <a href="#" onclick="openLoginModal()">Sign In</a>
+        <a href="#" onclick="openLoginModal()">Register</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Support</div>
+        <a href="#">FAQ</a>
+        <a href="#">Shipping Policy</a>
+        <a href="#">Return Policy</a>
+        <a href="#">Contact Us</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 ThreadGold. All rights reserved.</span>
+      <span>Made with ♥ for sustainable fashion in India</span>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="js/firebase.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Render nav
+    document.getElementById('navContainer').innerHTML = renderRootNav('home');
+    document.getElementById('cartContainer').innerHTML = getCartHTML();
+    document.getElementById('loginContainer').innerHTML = getLoginModalHTML();
+    document.getElementById('logoutContainer').innerHTML = getLogoutModalHTML();
+
+    // Marquee
+    const marqueeItems = ['Levi\'s', 'Zara', 'H&M', 'FabIndia', 'Coach', 'Uniqlo', 'Van Heusen', 'Wrangler', 'Roadster', 'W', 'Only', 'Marks & Spencer'];
+    const track = document.getElementById('marqueeTrack');
+    const doubled = [...marqueeItems, ...marqueeItems, ...marqueeItems];
+    track.innerHTML = doubled.map(b => `<span class="marquee-item">${b}</span><span class="marquee-dot">✦</span>`).join('');
+
+    // Categories
+    document.getElementById('categoryGrid').innerHTML = CATEGORIES.map(c => `
+      <div class="category-card" onclick="window.location.href='pages/shop.html?cat=${c.name}'">
+        <div class="category-icon">${c.icon}</div>
+        <div class="category-name">${c.name}</div>
+        <div class="category-count">${c.count} items</div>
+      </div>
+    `).join('');
+
+    (window.productsReady || Promise.resolve()).then(() => {
+      document.getElementById('featuredGrid').innerHTML = PRODUCTS.slice(0, 8).map(renderProductCard).join('');
+      updateCartUI();
+    });
+  </script>
+</body>
+</html>
