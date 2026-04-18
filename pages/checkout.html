@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - ThreadGold</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="navContainer"></div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="modal-overlay" id="successModal">
+    <div class="modal" style="text-align:center; max-width:480px;">
+      <div style="font-size:64px; margin-bottom:20px;">🎉</div>
+      <div class="modal-title">Order Placed!</div>
+      <div class="modal-subtitle">Your order has been confirmed and will be shipped soon.</div>
+      <div id="orderConfirmDetails" style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:24px 0; text-align:left;"></div>
+      <a href="orders.html" class="btn btn-gold btn-full">View My Orders</a>
+      <a href="../index.html" class="btn btn-dark btn-full mt-12">Continue Shopping</a>
+    </div>
+  </div>
+
+  <main class="page-wrapper">
+    <div class="page-hero">
+      <div class="section-tag">Almost There</div>
+      <h1>Checkout</h1>
+    </div>
+
+    <div class="checkout-layout">
+      <div class="checkout-main">
+        <div class="checkout-steps">
+          <div class="step active" id="step1">
+            <div class="step-num">1</div>
+            <div class="step-label">Address</div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step2">
+            <div class="step-num">2</div>
+            <div class="step-label">Payment</div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step3">
+            <div class="step-num">3</div>
+            <div class="step-label">Review</div>
+          </div>
+        </div>
+
+        <div id="panelAddress">
+          <h2 style="font-size:24px; font-weight:700; margin-bottom:28px;">Delivery Address</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input class="form-input" id="fname" placeholder="Aarav" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input class="form-input" id="lname" placeholder="Sharma" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mobile Number</label>
+            <input class="form-input" id="mobile" type="tel" placeholder="+91 98765 43210" maxlength="14" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">House / Flat / Floor No.</label>
+            <input class="form-input" id="addr1" placeholder="House No. 42, Sunrise Apartments" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Area / Street / Locality</label>
+            <input class="form-input" id="addr2" placeholder="MG Road, Indiranagar" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Landmark (Optional)</label>
+            <input class="form-input" id="landmark" placeholder="Near Apollo Hospital">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input class="form-input" id="city" placeholder="Bangalore" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">PIN Code</label>
+              <input class="form-input" id="pincode" placeholder="560001" maxlength="6" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">State</label>
+            <select class="form-select" id="state" required>
+              <option value="">Select State</option>
+              <option>Andhra Pradesh</option><option>Arunachal Pradesh</option>
+              <option>Assam</option><option>Bihar</option><option>Chhattisgarh</option>
+              <option>Goa</option><option>Gujarat</option><option>Haryana</option>
+              <option>Himachal Pradesh</option><option>Jharkhand</option>
+              <option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option>
+              <option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option>
+              <option>Mizoram</option><option>Nagaland</option><option>Odisha</option>
+              <option>Punjab</option><option>Rajasthan</option><option>Sikkim</option>
+              <option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option>
+              <option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option>
+              <option>Delhi</option><option>Jammu & Kashmir</option><option>Ladakh</option>
+            </select>
+          </div>
+          <button class="btn btn-gold" onclick="nextStep(2)">Continue to Payment →</button>
+        </div>
+
+        <div id="panelPayment" class="hidden">
+          <h2 style="font-size:24px; font-weight:700; margin-bottom:28px;">Payment Method</h2>
+          <div class="payment-options" id="paymentOptions">
+            <div class="payment-option selected" onclick="selectPayment('cod', this)">
+              <div class="payment-option-icon">💵</div>
+              <div>
+                <div class="payment-option-label">Cash on Delivery</div>
+                <div class="payment-option-desc">Pay when your order arrives. Available pan India.</div>
+              </div>
+              <div class="payment-option-radio"><div></div></div>
+            </div>
+            <div class="payment-option" onclick="selectPayment('upi', this)">
+              <div class="payment-option-icon">📲</div>
+              <div>
+                <div class="payment-option-label">UPI Payment</div>
+                <div class="payment-option-desc">Pay via GPay, PhonePe, Paytm, BHIM</div>
+              </div>
+              <div class="payment-option-radio"><div></div></div>
+            </div>
+            <div class="payment-option" onclick="selectPayment('card', this)">
+              <div class="payment-option-icon">💳</div>
+              <div>
+                <div class="payment-option-label">Credit / Debit Card</div>
+                <div class="payment-option-desc">Visa, Mastercard, RuPay accepted</div>
+              </div>
+              <div class="payment-option-radio"><div></div></div>
+            </div>
+            <div class="payment-option" onclick="selectPayment('netbanking', this)">
+              <div class="payment-option-icon">🏦</div>
+              <div>
+                <div class="payment-option-label">Net Banking</div>
+                <div class="payment-option-desc">All major Indian banks supported</div>
+              </div>
+              <div class="payment-option-radio"><div></div></div>
+            </div>
+          </div>
+
+          <div id="upiFields" class="hidden" style="margin-top:20px;">
+            <div class="form-group">
+              <label class="form-label">UPI ID</label>
+              <input class="form-input" placeholder="yourname@upi">
+            </div>
+          </div>
+
+          <div id="cardFields" class="hidden" style="margin-top:20px;">
+            <div class="form-group">
+              <label class="form-label">Card Number</label>
+              <input class="form-input" placeholder="1234 5678 9012 3456" maxlength="19">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Expiry</label>
+                <input class="form-input" placeholder="MM/YY" maxlength="5">
+              </div>
+              <div class="form-group">
+                <label class="form-label">CVV</label>
+                <input class="form-input" placeholder="123" maxlength="3" type="password">
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:12px; margin-top:28px;">
+            <button class="btn btn-dark" onclick="prevStep(1)">← Back</button>
+            <button class="btn btn-gold" id="btnReviewOrder" onclick="nextStep(3)">Review Order →</button>
+            <button class="btn btn-gold hidden" id="btnPlaceOrderFromPayment" onclick="placeOrderFinal()" style="flex:1;">Place Order</button>
+          </div>
+        </div>
+
+        <div id="panelReview" class="hidden">
+          <h2 style="font-size:24px; font-weight:700; margin-bottom:28px;">Review Your Order</h2>
+          <div id="reviewSummary"></div>
+
+          <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:24px;">
+            <div style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Delivery Address</div>
+            <div id="reviewAddress" style="font-size:14px; line-height:1.8; color:var(--muted);"></div>
+          </div>
+
+          <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:28px;">
+            <div style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Payment Method</div>
+            <div id="reviewPayment" style="font-size:14px; color:var(--muted);"></div>
+          </div>
+
+          <div style="display:flex; gap:12px;">
+            <button class="btn btn-dark" onclick="prevStep(2)">← Back</button>
+            <button class="btn btn-gold" onclick="placeOrderFinal()" style="flex:1;">Place Order</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkout-summary">
+        <div class="checkout-summary-card">
+          <h3 style="font-size:18px; font-weight:700; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border);">Order Summary</h3>
+          <div id="summaryItems"></div>
+          <div class="divider"></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; color:var(--muted);">
+            <span>Subtotal</span>
+            <span id="summarySubtotal"></span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; color:var(--muted);">
+            <span>Delivery</span>
+            <span id="summaryDelivery" style="color:var(--success);">FREE</span>
+          </div>
+          <div class="divider"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:13px; letter-spacing:1px; text-transform:uppercase;">Total</span>
+            <span style="font-family:'Playfair Display',serif; font-size:28px; font-weight:900; color:var(--gold);" id="summaryTotal"></span>
+          </div>
+          <div style="margin-top:20px; padding:12px; background:rgba(201,168,76,0.07); border-radius:var(--radius); border:1px solid rgba(201,168,76,0.2); font-size:12px; color:var(--gold);">
+            Secure checkout · 7-day returns guaranteed
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../js/firebase.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    document.getElementById('navContainer').innerHTML = renderNav('');
+    if (!state.user) window.location.href = '../index.html';
+    if (state.cart.length === 0) window.location.href = 'shop.html';
+
+    let selectedPayment = 'cod';
+
+    function getDeliveryCharge() {
+      return getCartTotal() >= 999 ? 0 : 99;
+    }
+
+    function renderSummary() {
+      const items = state.cart;
+      const subtotal = getCartTotal();
+      const delivery = getDeliveryCharge();
+
+      document.getElementById('summaryItems').innerHTML = items.map((item) => `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:12px;">
+          <div style="display:flex; gap:10px; align-items:center;">
+            ${
+              Array.isArray(item.images) && item.images[0]
+                ? `<img src="${item.images[0]}" alt="${item.name}" style="width:42px; height:42px; object-fit:cover; border-radius:10px; border:1px solid var(--border);">`
+                : `<div style="font-size:28px;">${item.emoji || '👗'}</div>`
+            }
+            <div>
+              <div style="font-size:13px; font-weight:600;">${item.name}</div>
+              <div style="font-size:11px; color:var(--muted);">${item.brand} · ${item.size}</div>
+            </div>
+          </div>
+          <div style="font-size:14px; font-weight:600; white-space:nowrap;">₹${item.price.toLocaleString('en-IN')}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('summarySubtotal').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+      document.getElementById('summaryDelivery').textContent = delivery === 0 ? 'FREE' : `₹${delivery}`;
+      document.getElementById('summaryTotal').textContent = `₹${(subtotal + delivery).toLocaleString('en-IN')}`;
+    }
+
+    function selectPayment(method, element) {
+      selectedPayment = method;
+      document.querySelectorAll('.payment-option').forEach((option) => option.classList.remove('selected'));
+      element.classList.add('selected');
+      document.getElementById('upiFields').classList.toggle('hidden', method !== 'upi');
+      document.getElementById('cardFields').classList.toggle('hidden', method !== 'card');
+
+      const btnReview = document.getElementById('btnReviewOrder');
+      const btnPlace = document.getElementById('btnPlaceOrderFromPayment');
+      if (btnReview && btnPlace) {
+        const isCOD = method === 'cod';
+        btnReview.classList.toggle('hidden', isCOD);
+        btnPlace.classList.toggle('hidden', !isCOD);
+      }
+    }
+
+    // Ensure COD is applied on first load (hide card/upi fields)
+    document.addEventListener('DOMContentLoaded', () => {
+      const defaultSelected = document.querySelector('.payment-option.selected');
+      if (defaultSelected) selectPayment('cod', defaultSelected);
+    });
+
+    function nextStep(step) {
+      if (step === 2) {
+        const required = ['fname', 'lname', 'mobile', 'addr1', 'addr2', 'city', 'pincode', 'state'];
+        const missing = required.filter((id) => !document.getElementById(id).value.trim());
+        if (missing.length > 0) {
+          showToast('Please fill all required fields', 'error');
+          return;
+        }
+      }
+
+      if (step === 3) {
+        const firstName = document.getElementById('fname').value;
+        const lastName = document.getElementById('lname').value;
+        const address = `${document.getElementById('addr1').value}, ${document.getElementById('addr2').value}, ${document.getElementById('city').value} - ${document.getElementById('pincode').value}, ${document.getElementById('state').value}`;
+        const paymentLabels = { cod: 'Cash on Delivery', upi: 'UPI Payment', card: 'Credit/Debit Card', netbanking: 'Net Banking' };
+        const finalTotal = getCartTotal() + getDeliveryCharge();
+
+        document.getElementById('reviewAddress').innerHTML = `${firstName} ${lastName}<br>${address}<br>Phone: ${document.getElementById('mobile').value}`;
+        document.getElementById('reviewPayment').textContent = paymentLabels[selectedPayment];
+        document.getElementById('reviewSummary').innerHTML = state.cart.map((item) => `
+          <div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);">
+            <span style="font-size:14px;">
+              ${
+                Array.isArray(item.images) && item.images[0]
+                  ? `<img src="${item.images[0]}" alt="${item.name}" style="width:20px; height:20px; object-fit:cover; border-radius:6px; border:1px solid var(--border); vertical-align:middle; margin-right:8px;">`
+                  : `${item.emoji || '👗'} `
+              }
+              ${item.name}
+            </span>
+            <span style="font-size:14px; color:var(--gold);">₹${item.price.toLocaleString('en-IN')}</span>
+          </div>
+        `).join('') + `<div style="display:flex;justify-content:space-between;padding:16px 0;font-weight:700;font-size:16px;"><span>Total</span><span style="color:var(--gold);">₹${finalTotal.toLocaleString('en-IN')}</span></div>`;
+      }
+
+      ['panelAddress', 'panelPayment', 'panelReview'].forEach((id, index) => {
+        document.getElementById(id).classList.toggle('hidden', index + 1 !== step);
+      });
+
+      ['step1', 'step2', 'step3'].forEach((id, index) => {
+        const element = document.getElementById(id);
+        element.classList.remove('active', 'done');
+        if (index + 1 < step) element.classList.add('done');
+        if (index + 1 === step) element.classList.add('active');
+      });
+    }
+
+    function prevStep(step) {
+      nextStep(step);
+    }
+
+    function placeOrderFinal() {
+      const address = {
+        name: `${document.getElementById('fname').value} ${document.getElementById('lname').value}`,
+        line1: document.getElementById('addr1').value,
+        line2: document.getElementById('addr2').value,
+        city: document.getElementById('city').value,
+        pincode: document.getElementById('pincode').value,
+        state: document.getElementById('state').value,
+        mobile: document.getElementById('mobile').value,
+      };
+
+      const order = placeOrder({
+        address,
+        payment: selectedPayment,
+        delivery: getDeliveryCharge(),
+      });
+
+      document.getElementById('orderConfirmDetails').innerHTML = `
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Order ID</div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:16px;">#${order.id}</div>
+        <div style="font-size:13px;color:var(--muted);">Expected delivery: 4-7 business days</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">You can cancel within 24 hours from My Orders</div>
+      `;
+      document.getElementById('successModal').classList.add('open');
+    }
+
+    (window.productsReady || Promise.resolve()).then(() => {
+      renderSummary();
+    });
+  </script>
+</body>
+</html>

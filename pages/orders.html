@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - ThreadGold</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="navContainer"></div>
+  <div id="cartContainer"></div>
+  <div id="loginContainer"></div>
+  <div id="logoutContainer"></div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <main class="page-wrapper">
+    <div class="page-hero">
+      <div class="section-tag">Your Purchases</div>
+      <h1>My Orders</h1>
+      <p id="orderCount">Loading...</p>
+    </div>
+
+    <div style="padding:48px; max-width:900px; margin:0 auto;" id="ordersContainer"></div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../js/firebase.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    document.getElementById('navContainer').innerHTML = renderNav('orders');
+    document.getElementById('cartContainer').innerHTML = getCartHTML();
+    document.getElementById('loginContainer').innerHTML = getLoginModalHTML();
+    document.getElementById('logoutContainer').innerHTML = getLogoutModalHTML();
+
+    Promise.all([
+      (window.productsReady || Promise.resolve()),
+      (window.ordersReady || Promise.resolve()),
+    ]).then(() => {
+      if (!state.user) {
+        document.getElementById('ordersContainer').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔐</div>
+            <h3>Please sign in</h3>
+            <p>You need to be logged in to view your orders</p>
+            <button class="btn btn-gold" onclick="openLoginModal()">Sign In</button>
+          </div>
+        `;
+        document.getElementById('orderCount').textContent = '';
+      } else {
+        renderOrders();
+      }
+      updateCartUI();
+    });
+
+    function getVisibleOrders() {
+      return state.orders.filter((order) => !order.userEmail || order.userEmail === state.user.email);
+    }
+
+    function renderOrders() {
+      const orders = getVisibleOrders();
+      document.getElementById('orderCount').textContent = `${orders.length} order${orders.length === 1 ? '' : 's'} placed`;
+
+      if (orders.length === 0) {
+        document.getElementById('ordersContainer').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <h3>No orders yet</h3>
+            <p>Start shopping and your orders will appear here</p>
+            <a href="shop.html" class="btn btn-gold">Browse Shop</a>
+          </div>
+        `;
+        return;
+      }
+
+      const paymentLabels = { cod: 'Cash on Delivery', upi: 'UPI', card: 'Credit/Debit Card', netbanking: 'Net Banking' };
+
+      document.getElementById('ordersContainer').innerHTML = orders.map((order) => {
+        const hoursSince = (Date.now() - order.timestamp) / 3600000;
+        const canCancel = order.status !== 'Cancelled' && hoursSince < 24;
+        const timeLeft = canCancel ? Math.max(0, 24 - hoursSince) : 0;
+
+        return `
+          <div class="order-card" style="margin-bottom:20px;">
+            <div class="order-header">
+              <div>
+                <div class="order-id">Order #${order.id}</div>
+                <div class="order-date">📅 ${order.date}</div>
+              </div>
+              <span class="order-status status-${order.status.toLowerCase()}">${order.status}</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+              ${order.items.map((item) => `
+                <div style="display:flex; align-items:center; gap:12px; padding:8px; background:rgba(255,255,255,0.02); border-radius:4px;">
+                  ${
+                    Array.isArray(item.images) && item.images[0]
+                      ? `<img src="${item.images[0]}" alt="${item.name}" style="width:42px; height:42px; object-fit:cover; border-radius:10px; border:1px solid var(--border);">`
+                      : `<span style="font-size:28px;">${item.emoji || '👗'}</span>`
+                  }
+                  <div>
+                    <div style="font-size:14px; font-weight:600;">${item.name}</div>
+                    <div style="font-size:11px; color:var(--muted);">${item.brand} · Size ${item.size}</div>
+                  </div>
+                  <span style="margin-left:auto; color:var(--gold); font-weight:600;">₹${item.price.toLocaleString('en-IN')}</span>
+                </div>
+              `).join('')}
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+              <div style="background:var(--card); border:1px solid var(--border); border-radius:4px; padding:12px;">
+                <div style="font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:4px;">Delivery To</div>
+                <div style="font-size:12px; color:var(--muted); line-height:1.6;">
+                  ${order.address?.name || 'N/A'}<br>
+                  ${order.address?.line1 || ''}, ${order.address?.city || ''}<br>
+                  ${order.address?.state || ''} - ${order.address?.pincode || ''}
+                </div>
+              </div>
+              <div style="background:var(--card); border:1px solid var(--border); border-radius:4px; padding:12px;">
+                <div style="font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-bottom:4px;">Payment</div>
+                <div style="font-size:12px; color:var(--muted);">${paymentLabels[order.payment] || order.payment}</div>
+                <div style="font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); margin-top:10px; margin-bottom:4px;">Est. Delivery</div>
+                <div style="font-size:12px; color:var(--muted);">4-7 business days</div>
+              </div>
+            </div>
+
+            <div class="order-footer">
+              <div>
+                <div style="font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:2px;">Order Total</div>
+                <div class="order-total">₹${order.total.toLocaleString('en-IN')}</div>
+              </div>
+              <div style="display:flex; gap:12px; align-items:center;">
+                ${canCancel ? `
+                  <span style="font-size:11px; color:var(--muted);">Cancel within ${Math.floor(timeLeft)}h ${Math.round((timeLeft % 1) * 60)}m</span>
+                  <button class="btn btn-danger btn-sm" onclick="handleCancel('${order.id}')">Cancel Order</button>
+                ` : order.status === 'Cancelled' ? `
+                  <span style="font-size:12px; color:var(--danger);">Order Cancelled</span>
+                ` : `
+                  <span style="font-size:12px; color:var(--muted);">Cancellation window closed</span>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleCancel(orderId) {
+      if (!confirm('Are you sure you want to cancel this order? This cannot be undone.')) return;
+      const success = cancelOrder(orderId);
+      if (!success) {
+        showToast('Cannot cancel - 24-hour window has passed', 'error');
+        return;
+      }
+      showToast('Order cancelled successfully', 'success');
+      setTimeout(renderOrders, 400);
+    }
+
+  </script>
+</body>
+</html>

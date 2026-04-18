@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - ThreadGold</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div id="accessDenied" class="modal-overlay" style="display:none;">
+    <div class="modal" style="text-align:center; max-width:420px;">
+      <div style="font-size:64px; margin-bottom:20px;">🔐</div>
+      <div class="modal-title">Admin Access Only</div>
+      <div class="modal-subtitle" style="margin-bottom:28px;">
+        Sign in with admin credentials to access this panel.
+      </div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="adminEmail" type="email" placeholder="admin@threadgold.in"></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="adminPass" type="password" placeholder="Enter password"></div>
+      <button class="btn btn-gold btn-full" onclick="adminLogin()">Access Dashboard</button>
+      <a href="../index.html" class="btn btn-dark btn-full mt-12">Back to Store</a>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="addProductModal">
+    <div class="modal">
+      <div class="modal-title">Add New Product</div>
+      <div class="modal-subtitle">List a new item in the store</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Product Name</label><input class="form-input" id="pName" placeholder="Vintage Levi's Jacket"></div>
+        <div class="form-group"><label class="form-label">Brand</label><input class="form-input" id="pBrand" placeholder="Levi's"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="pCategory">
+            <option>Jackets</option><option>Dresses</option><option>Tops</option>
+            <option>Bottoms</option><option>Ethnic</option><option>Accessories</option>
+            <option>Blazers</option><option>Shoes</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Size</label><input class="form-input" id="pSize" placeholder="M"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Selling Price (Rs)</label><input class="form-input" id="pPrice" type="number" placeholder="1299"></div>
+        <div class="form-group"><label class="form-label">Original MRP (Rs)</label><input class="form-input" id="pOriginal" type="number" placeholder="4500"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Condition</label>
+          <select class="form-select" id="pCondition">
+            <option>Like New</option><option>Excellent</option><option>Good</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product Images (minimum 2)</label>
+          <input class="form-input" id="pImages" type="file" accept="image/*" multiple>
+          <div id="pImagesHelp" style="margin-top:8px; font-size:12px; color:var(--muted);">
+            Add at least 2 pictures. First image will be used as the thumbnail.
+          </div>
+          <div id="pImagesPreview" style="margin-top:10px; display:grid; grid-template-columns:repeat(6, 1fr); gap:8px;"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Quantity in Stock</label>
+          <input class="form-input" id="pQuantity" type="number" placeholder="1" value="1" min="0">
+        </div>
+      </div>
+      <div style="display:flex; gap:12px; margin-top:8px;">
+        <button class="btn btn-dark" style="flex:1;" onclick="closeAddProductModal()">Cancel</button>
+        <button class="btn btn-gold" style="flex:1;" onclick="saveProduct()">Add Product</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="orderDetailsModal">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-title">Order Details</div>
+      <div class="modal-subtitle" id="orderDetailsId"></div>
+      
+      <div style="margin:24px 0;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
+          <div>
+            <div style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Customer Information</div>
+            <div id="orderCustomerInfo" style="font-size:14px; line-height:1.6;"></div>
+          </div>
+          <div>
+            <div style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Delivery Address</div>
+            <div id="orderAddressInfo" style="font-size:14px; line-height:1.6;"></div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom:24px;">
+          <div style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:12px;">Order Items</div>
+          <div id="orderItemsList"></div>
+        </div>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <div>
+            <div style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Payment & Status</div>
+            <div id="orderPaymentInfo" style="font-size:14px; line-height:1.6;"></div>
+          </div>
+          <div>
+            <div style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Order Summary</div>
+            <div id="orderSummaryInfo" style="font-size:14px; line-height:1.6;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:flex; gap:12px; margin-top:24px;">
+        <button class="btn btn-dark" style="flex:1;" onclick="closeOrderDetails()">Close</button>
+        <select class="form-select" style="flex:1;" id="orderStatusSelect" onchange="updateOrderStatusFromModal()">
+          <option value="Confirmed">Confirmed</option>
+          <option value="Shipped">Shipped</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-layout" id="adminLayout" style="display:none;">
+    <aside class="admin-sidebar">
+      <div class="admin-logo">
+        <div class="admin-logo-text">ThreadGold</div>
+        <div class="admin-logo-sub">Admin Panel</div>
+      </div>
+      <nav>
+        <div class="admin-nav-item active" onclick="showTab('overview', this)">
+          <span class="icon">📊</span> Overview
+        </div>
+        <div class="admin-nav-item" onclick="showTab('orders', this)">
+          <span class="icon">📦</span> Orders
+        </div>
+        <div class="admin-nav-item" onclick="showTab('products', this)">
+          <span class="icon">👗</span> Products
+        </div>
+        <div class="admin-nav-item" onclick="showTab('customers', this)">
+          <span class="icon">👥</span> Customers
+        </div>
+      </nav>
+      <div style="margin-top:auto; padding:24px;">
+        <div style="font-size:11px; letter-spacing:1px; color:var(--muted); margin-bottom:12px; text-transform:uppercase;">Logged in as Admin</div>
+        <button class="btn btn-dark btn-full" onclick="window.location.href='../index.html'">View Store</button>
+        <button class="btn btn-danger btn-full mt-12" style="margin-top:10px;" onclick="adminLogout()">Sign Out</button>
+      </div>
+    </aside>
+
+    <div class="admin-content">
+      <div class="admin-topbar">
+        <div class="admin-page-title" id="adminPageTitle">Overview</div>
+        <div style="font-size:13px; color:var(--muted);">Welcome back, <span style="color:var(--gold);">Admin</span></div>
+      </div>
+
+      <div class="admin-body">
+        <div id="tab-overview">
+          <div class="stat-cards" id="statCards"></div>
+          
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:32px;">
+            <button class="btn btn-gold" onclick="showTab('overview', document.querySelectorAll('.admin-nav-item')[0])" style="padding:16px; height:auto; flex-direction:column; gap:8px;">
+              <span style="font-size:24px;">📊</span>
+              <span style="font-size:12px;">Overview</span>
+            </button>
+            <button class="btn btn-dark" onclick="showTab('orders', document.querySelectorAll('.admin-nav-item')[1])" style="padding:16px; height:auto; flex-direction:column; gap:8px;">
+              <span style="font-size:24px;">📦</span>
+              <span style="font-size:12px;">Orders</span>
+            </button>
+            <button class="btn btn-dark" onclick="showTab('products', document.querySelectorAll('.admin-nav-item')[2])" style="padding:16px; height:auto; flex-direction:column; gap:8px;">
+              <span style="font-size:24px;">👗</span>
+              <span style="font-size:12px;">Products</span>
+            </button>
+            <button class="btn btn-dark" onclick="showTab('customers', document.querySelectorAll('.admin-nav-item')[3])" style="padding:16px; height:auto; flex-direction:column; gap:8px;">
+              <span style="font-size:24px;">👥</span>
+              <span style="font-size:12px;">Customers</span>
+            </button>
+          </div>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+            <div class="table-card">
+              <div class="table-header">
+                <span class="table-title">Recent Orders</span>
+                <button class="btn btn-dark btn-sm" onclick="showTab('orders')">View All</button>
+              </div>
+              <div style="padding:0 16px;" id="recentOrdersPreview"></div>
+            </div>
+            <div class="table-card">
+              <div class="table-header">
+                <span class="table-title">Popular Products</span>
+              </div>
+              <div style="padding:0 16px;" id="popularProductsPreview"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-orders" class="hidden">
+          <div style="margin-bottom:16px;">
+            <button class="btn btn-dark btn-sm" onclick="showTab('overview', document.querySelectorAll('.admin-nav-item')[0])">← Back to Dashboard</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <div class="search-bar"><span class="icon">🔍</span><input type="text" placeholder="Search orders..." id="orderSearch" oninput="filterOrders()"></div>
+            <select class="form-select" style="width:auto;" id="orderStatusFilter" onchange="filterOrders()">
+              <option value="all">All Status</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="table-card">
+            <table class="data-table" id="ordersTable"></table>
+          </div>
+        </div>
+
+        <div id="tab-products" class="hidden">
+          <div style="margin-bottom:16px;">
+            <button class="btn btn-dark btn-sm" onclick="showTab('overview', document.querySelectorAll('.admin-nav-item')[0])">← Back to Dashboard</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <div class="search-bar"><span class="icon">🔍</span><input type="text" placeholder="Search products..." id="productSearch" oninput="filterProducts()"></div>
+            <button class="btn btn-gold" onclick="openAddProduct()">+ Add Product</button>
+          </div>
+          <div class="table-card">
+            <table class="data-table" id="productsTable"></table>
+          </div>
+        </div>
+
+        <div id="tab-customers" class="hidden">
+          <div style="margin-bottom:16px;">
+            <button class="btn btn-dark btn-sm" onclick="showTab('overview', document.querySelectorAll('.admin-nav-item')[0])">← Back to Dashboard</button>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><span class="table-title">All Customers</span></div>
+            <table class="data-table" id="customersTable"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../js/firebase.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+
+    function getAdminOrders() {
+      // Only show real orders placed by customers, not sample data
+      const realOrders = state.orders.map((order) => ({
+        id: order.id,
+        customer: order.userName || order.address?.name || 'Customer',
+        email: order.userEmail || '',
+        items: order.items.map((item) => item.name).join(', '),
+        total: order.total,
+        status: order.status,
+        date: order.date,
+        payment: order.payment,
+      }));
+
+      // If no real orders, show a message
+      if (realOrders.length === 0) {
+        return [{
+          id: 'NO-ORDERS',
+          customer: 'No orders yet',
+          email: '',
+          items: 'Start selling to see customer orders here',
+          total: 0,
+          status: 'N/A',
+          date: 'N/A',
+          payment: 'N/A',
+        }];
+      }
+
+      return realOrders;
+    }
+
+    function getAdminCustomers() {
+      const liveCustomers = state.orders.reduce((map, order) => {
+        const email = order.userEmail || '';
+        if (!email) return map;
+        if (!map[email]) {
+          map[email] = {
+            name: order.userName || order.address?.name || email.split('@')[0],
+            email,
+            orders: 0,
+            spent: 0,
+            joined: 'Live',
+            city: order.address?.city || '-',
+          };
+        }
+        map[email].orders += 1;
+        map[email].spent += order.total;
+        if (order.address?.city) map[email].city = order.address.city;
+        return map;
+      }, {});
+
+      return Object.values(liveCustomers);
+    }
+
+    let adminProducts = [...PRODUCTS];
+
+    function checkAdmin() {
+      if (state.user?.role === 'admin') {
+        document.getElementById('accessDenied').style.display = 'none';
+        document.getElementById('adminLayout').style.display = 'flex';
+        initDashboard();
+      } else {
+        document.getElementById('accessDenied').style.display = 'flex';
+        document.getElementById('adminLayout').style.display = 'none';
+      }
+    }
+
+    function adminLogin() {
+      const email = document.getElementById('adminEmail').value;
+      const password = document.getElementById('adminPass').value;
+      const role = login(email, password);
+      if (role !== 'admin') {
+        showToast('Invalid admin credentials', 'error');
+        return;
+      }
+      checkAdmin();
+      showToast('Welcome to the Admin Dashboard!', 'success');
+    }
+
+    function adminLogout() {
+      logout();
+    }
+
+    function showTab(tabName, clickedElement) {
+      ['overview', 'orders', 'products', 'customers'].forEach((tab) => {
+        document.getElementById(`tab-${tab}`).classList.toggle('hidden', tab !== tabName);
+      });
+
+      document.querySelectorAll('.admin-nav-item').forEach((item) => item.classList.remove('active'));
+      if (clickedElement) {
+        clickedElement.classList.add('active');
+      } else {
+        document.querySelectorAll('.admin-nav-item').forEach((item) => {
+          if (item.textContent.toLowerCase().includes(tabName)) item.classList.add('active');
+        });
+      }
+
+      const titles = { overview: 'Overview', orders: 'Orders', products: 'Products', customers: 'Customers' };
+      document.getElementById('adminPageTitle').textContent = titles[tabName];
+
+      if (tabName === 'orders') renderOrdersTable(getAdminOrders());
+      if (tabName === 'products') renderProductsTable(adminProducts);
+      if (tabName === 'customers') renderCustomersTable();
+    }
+
+    function initDashboard() {
+      adminProducts = [...PRODUCTS];
+      const adminOrders = getAdminOrders();
+      const adminCustomers = getAdminCustomers();
+      const realOrders = adminOrders.filter(order => order.id !== 'NO-ORDERS');
+      const totalRevenue = realOrders.filter((order) => order.status !== 'Cancelled').reduce((sum, order) => sum + order.total, 0);
+
+      document.getElementById('statCards').innerHTML = [
+        { label: 'Total Revenue', value: `₹${totalRevenue.toLocaleString('en-IN')}`, change: '+12% this month', dir: 'up' },
+        { label: 'Total Orders', value: realOrders.length, change: '+8 this week', dir: 'up' },
+        { label: 'Products Listed', value: adminProducts.length, change: '+3 this week', dir: 'up' },
+        { label: 'Active Customers', value: adminCustomers.length, change: '+5 this month', dir: 'up' },
+      ].map((stat) => `
+        <div class="stat-card">
+          <div class="stat-card-label">${stat.label}</div>
+          <div class="stat-card-value">${stat.value}</div>
+          <div class="stat-card-change ${stat.dir}">↑ ${stat.change}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('recentOrdersPreview').innerHTML = realOrders.slice(0, 4).map((order) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--border); cursor:pointer;" onclick="viewOrderDetails('${order.id}')">
+          <div>
+            <div style="font-size:13px; font-weight:600;">${order.customer}</div>
+            <div style="font-size:11px; color:var(--muted);">#${order.id} · ${order.date}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px; color:var(--gold); font-weight:600;">₹${order.total.toLocaleString('en-IN')}</div>
+            <span class="order-status status-${order.status.toLowerCase()}" style="font-size:9px;">${order.status}</span>
+          </div>
+        </div>
+      `).join('') || '<div style="padding:20px; text-align:center; color:var(--muted);">No orders yet</div>';
+
+      document.getElementById('popularProductsPreview').innerHTML = adminProducts.slice(0, 4).map((product) => `
+        <div style="display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border);">
+          ${
+            product.images?.[0]
+              ? `<img src="${product.images[0]}" alt="${product.name}" style="width:42px; height:42px; object-fit:cover; border-radius:10px; border:1px solid var(--border);">`
+              : `<span style="font-size:28px;">${product.emoji || '👗'}</span>`
+          }
+          <div style="flex:1;">
+            <div style="font-size:13px; font-weight:600;">${product.name}</div>
+            <div style="font-size:11px; color:var(--muted);">${product.brand} · ${product.size}</div>
+          </div>
+          <div style="font-size:14px; color:var(--gold); font-weight:600;">₹${product.price.toLocaleString('en-IN')}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderOrdersTable(orders) {
+      // Filter out the NO-ORDERS placeholder
+      const realOrders = orders.filter(order => order.id !== 'NO-ORDERS');
+      
+      if (realOrders.length === 0) {
+        document.getElementById('ordersTable').innerHTML = `
+          <thead>
+            <tr>
+              <th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="8" style="text-align:center; padding:40px; color:var(--muted);">
+                <div style="font-size:48px; margin-bottom:16px;">📦</div>
+                No orders yet. Start selling to see customer orders here!
+              </td>
+            </tr>
+          </tbody>
+        `;
+        return;
+      }
+
+      document.getElementById('ordersTable').innerHTML = `
+        <thead>
+          <tr>
+            <th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${realOrders.map((order) => `
+            <tr>
+              <td style="color:var(--gold); font-weight:600;">#${order.id}</td>
+              <td><div style="font-weight:600;">${order.customer}</div><div style="font-size:11px;color:var(--muted);">${order.email}</div></td>
+              <td style="font-size:12px; color:var(--muted); max-width:180px;">${order.items.length > 40 ? `${order.items.slice(0, 40)}...` : order.items}</td>
+              <td style="font-weight:700; color:var(--gold);">₹${order.total.toLocaleString('en-IN')}</td>
+              <td style="font-size:12px; color:var(--muted);">${order.payment}</td>
+              <td><span class="order-status status-${order.status.toLowerCase()}">${order.status}</span></td>
+              <td style="font-size:12px; color:var(--muted);">${order.date}</td>
+              <td>
+                <button class="btn btn-gold btn-sm" onclick="viewOrderDetails('${order.id}')">View Details</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+    }
+
+    function filterOrders() {
+      const query = document.getElementById('orderSearch').value.toLowerCase();
+      const status = document.getElementById('orderStatusFilter').value;
+      const allOrders = getAdminOrders().filter(order => order.id !== 'NO-ORDERS');
+      const filtered = allOrders.filter((order) => {
+        const matchQuery = !query || order.customer.toLowerCase().includes(query) || order.id.toLowerCase().includes(query);
+        const matchStatus = status === 'all' || order.status === status;
+        return matchQuery && matchStatus;
+      });
+
+      if (filtered.length === 0) {
+        document.getElementById('ordersTable').innerHTML = `
+          <thead>
+            <tr>
+              <th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="8" style="text-align:center; padding:40px; color:var(--muted);">
+                <div style="font-size:48px; margin-bottom:16px;">🔍</div>
+                No orders match your search criteria.
+              </td>
+            </tr>
+          </tbody>
+        `;
+        return;
+      }
+
+      renderOrdersTable(filtered);
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      const localOrder = state.orders.find((order) => order.id === orderId);
+      if (localOrder) {
+        localOrder.status = newStatus;
+        saveState();
+        try {
+          await upsertRemoteOrder(localOrder);
+        } catch (e) {
+          console.error(e);
+          showToast(`Failed to sync status: ${e?.code || ''} ${e?.message || e}`, 'error');
+        }
+      }
+      showToast(`Order #${orderId} marked as ${newStatus}`, 'success');
+      initDashboard();
+      showTab('orders');
+    }
+
+    function renderProductsTable(products) {
+      document.getElementById('productsTable').innerHTML = `
+        <thead>
+          <tr>
+            <th>Item</th><th>Brand</th><th>Category</th><th>Size</th><th>Condition</th><th>Price</th><th>Stock</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${products.map((product) => `
+            <tr>
+              <td>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  ${
+                    product.images?.[0]
+                      ? `<img src="${product.images[0]}" alt="${product.name}" style="width:34px; height:34px; object-fit:cover; border-radius:10px; border:1px solid var(--border);">`
+                      : `<span style="font-size:24px;">${product.emoji || '👗'}</span>`
+                  }
+                  <div style="font-size:13px; font-weight:600; max-width:160px;">${product.name}</div>
+                </div>
+              </td>
+              <td style="font-size:13px; color:var(--muted);">${product.brand}</td>
+              <td><span style="font-size:10px; padding:3px 8px; border:1px solid var(--border); border-radius:3px;">${product.category}</span></td>
+              <td style="font-size:13px;">${product.size}</td>
+              <td style="font-size:12px; color:var(--success);">● ${product.condition}</td>
+              <td style="font-weight:700; color:var(--gold);">₹${product.price.toLocaleString('en-IN')}</td>
+              <td style="text-align:center;">
+                ${product.quantity === 0 ? '<span style="background:#dc2626; color:white; padding:2px 8px; border-radius:3px; font-size:11px; font-weight:600;">Sold Out</span>' : `<span style="background:rgba(34,197,94,0.1); color:var(--success); padding:2px 8px; border-radius:3px; font-size:12px; font-weight:600;">${product.quantity} in stock</span>`}
+              </td>
+              <td style="text-align:center;">
+                <button class="btn btn-dark btn-sm" onclick="editProduct(${product.id})" style="margin-right:6px;">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+    }
+
+    function filterProducts() {
+      const query = document.getElementById('productSearch').value.toLowerCase();
+      const filtered = adminProducts.filter((product) =>
+        product.name.toLowerCase().includes(query) ||
+        product.brand.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        document.getElementById('productsTable').innerHTML = `
+          <thead>
+            <tr>
+              <th>Item</th><th>Brand</th><th>Category</th><th>Size</th><th>Condition</th><th>Price</th><th>Stock</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="8" style="text-align:center; padding:40px; color:var(--muted);">
+                <div style="font-size:48px; margin-bottom:16px;">🔍</div>
+                No products match your search criteria.
+              </td>
+            </tr>
+          </tbody>
+        `;
+        return;
+      }
+
+      renderProductsTable(filtered);
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Delete this product? This cannot be undone.')) return;
+
+      const productIndex = PRODUCTS.findIndex((product) => product.id === id);
+      if (productIndex === -1) return;
+
+      PRODUCTS.splice(productIndex, 1);
+      saveProducts();
+      try {
+        await deleteRemoteProduct(id);
+      } catch (e) {
+        console.error(e);
+        showToast(`Deleted locally but failed to sync online: ${e?.code || ''} ${e?.message || e}`, 'error');
+      }
+      adminProducts = [...PRODUCTS];
+      renderProductsTable(adminProducts);
+      initDashboard();
+      showTab('products');
+      showToast('Product deleted', 'success');
+    }
+
+    function openAddProduct() {
+      document.getElementById('addProductModal').classList.add('open');
+    }
+
+    function closeAddProduct() {
+      document.getElementById('addProductModal').classList.remove('open');
+    }
+
+    async function saveProduct() {
+      const name = document.getElementById('pName').value.trim();
+      const brand = document.getElementById('pBrand').value.trim();
+      const price = Number.parseInt(document.getElementById('pPrice').value, 10);
+      const originalPrice = Number.parseInt(document.getElementById('pOriginal').value, 10);
+      const quantity = Number.parseInt(document.getElementById('pQuantity').value, 10) || 1;
+
+      if (!name || !brand || Number.isNaN(price) || Number.isNaN(originalPrice)) {
+        showToast('Please fill all required fields', 'error');
+        return;
+      }
+
+      if (!Array.isArray(selectedProductImages) || selectedProductImages.length < 2) {
+        showToast('Please add at least 2 product images', 'error');
+        return;
+      }
+
+      const newProduct = {
+        id: Date.now(),
+        createdAt: Date.now(),
+        name,
+        brand,
+        category: document.getElementById('pCategory').value,
+        size: document.getElementById('pSize').value || 'OS',
+        condition: document.getElementById('pCondition').value,
+        price,
+        originalPrice,
+        images: selectedProductImages,
+        quantity,
+        badge: 'New',
+      };
+
+      PRODUCTS.unshift(newProduct);
+      saveProducts();
+      try {
+        await upsertRemoteProduct(newProduct);
+      } catch (e) {
+        console.error(e);
+        showToast(`Saved locally but failed to sync online: ${e?.code || ''} ${e?.message || e}`, 'error');
+      }
+      adminProducts = [...PRODUCTS];
+      resetProductForm();
+      closeAddProduct();
+      renderProductsTable(adminProducts);
+      initDashboard();
+      showTab('products');
+      showToast(`${name} added successfully!`, 'success');
+    }
+
+    function resetProductForm() {
+      document.getElementById('pName').value = '';
+      document.getElementById('pBrand').value = '';
+      document.getElementById('pPrice').value = '';
+      document.getElementById('pOriginal').value = '';
+      document.getElementById('pSize').value = '';
+      document.getElementById('pImages').value = '';
+      selectedProductImages = [];
+      renderSelectedImages();
+      document.getElementById('pQuantity').value = '1';
+      document.getElementById('pCategory').value = 'Jackets';
+      document.getElementById('pCondition').value = 'Like New';
+    }
+
+    function editProduct(id) {
+      const product = PRODUCTS.find(p => p.id === id);
+      if (!product) {
+        showToast('Product not found', 'error');
+        return;
+      }
+
+      // Pre-fill the form with current product data
+      document.getElementById('pName').value = product.name;
+      document.getElementById('pBrand').value = product.brand;
+      document.getElementById('pPrice').value = product.price;
+      document.getElementById('pOriginal').value = product.originalPrice;
+      document.getElementById('pSize').value = product.size;
+      selectedProductImages = Array.isArray(product.images) ? [...product.images] : [];
+      document.getElementById('pImages').value = '';
+      renderSelectedImages();
+      document.getElementById('pQuantity').value = product.quantity || 1;
+      document.getElementById('pCategory').value = product.category;
+      document.getElementById('pCondition').value = product.condition;
+
+      // Change modal title to Edit
+      document.querySelector('#addProductModal .modal-title').textContent = 'Edit Product';
+      document.querySelector('#addProductModal .modal-subtitle').textContent = 'Update product details';
+      document.querySelector('#addProductModal .btn-gold').textContent = 'Update Product';
+      document.querySelector('#addProductModal .btn-gold').onclick = () => updateProduct(id);
+
+      document.getElementById('addProductModal').classList.add('open');
+    }
+
+    async function updateProduct(id) {
+      const name = document.getElementById('pName').value.trim();
+      const brand = document.getElementById('pBrand').value.trim();
+      const price = Number.parseInt(document.getElementById('pPrice').value, 10);
+      const originalPrice = Number.parseInt(document.getElementById('pOriginal').value, 10);
+      const quantity = Number.parseInt(document.getElementById('pQuantity').value, 10) || 1;
+
+      if (!name || !brand || Number.isNaN(price) || Number.isNaN(originalPrice)) {
+        showToast('Please fill all required fields', 'error');
+        return;
+      }
+
+      if (!Array.isArray(selectedProductImages) || selectedProductImages.length < 2) {
+        showToast('Please add at least 2 product images', 'error');
+        return;
+      }
+
+      const productIndex = PRODUCTS.findIndex(p => p.id === id);
+      if (productIndex === -1) {
+        showToast('Product not found', 'error');
+        return;
+      }
+
+      PRODUCTS[productIndex] = {
+        ...PRODUCTS[productIndex],
+        name,
+        brand,
+        category: document.getElementById('pCategory').value,
+        size: document.getElementById('pSize').value || 'OS',
+        condition: document.getElementById('pCondition').value,
+        price,
+        originalPrice,
+        images: selectedProductImages,
+        quantity,
+      };
+
+      saveProducts();
+      try {
+        await upsertRemoteProduct(PRODUCTS[productIndex]);
+      } catch (e) {
+        console.error(e);
+        showToast(`Updated locally but failed to sync online: ${e?.code || ''} ${e?.message || e}`, 'error');
+      }
+      adminProducts = [...PRODUCTS];
+      resetProductForm();
+      closeAddProduct();
+      renderProductsTable(adminProducts);
+      initDashboard();
+      showTab('products');
+      showToast(`${name} updated successfully!`, 'success');
+    }
+
+    function closeAddProductModal() {
+      // Reset modal to Add mode
+      document.querySelector('#addProductModal .modal-title').textContent = 'Add New Product';
+      document.querySelector('#addProductModal .modal-subtitle').textContent = 'List a new item in the store';
+      document.querySelector('#addProductModal .btn-gold').textContent = 'Add Product';
+      document.querySelector('#addProductModal .btn-gold').onclick = () => saveProduct();
+      
+      resetProductForm();
+      closeAddProduct();
+    }
+
+    function renderCustomersTable() {
+      const customers = getAdminCustomers();
+
+      if (customers.length === 0) {
+        document.getElementById('customersTable').innerHTML = `
+          <thead>
+            <tr>
+              <th>Customer</th><th>Email</th><th>City</th><th>Orders</th><th>Total Spent</th><th>Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">
+                <div style="font-size:48px; margin-bottom:16px;">👥</div>
+                No customers yet. Start selling to see customer data here!
+              </td>
+            </tr>
+          </tbody>
+        `;
+        return;
+      }
+
+      document.getElementById('customersTable').innerHTML = `
+        <thead>
+          <tr>
+            <th>Customer</th><th>Email</th><th>City</th><th>Orders</th><th>Total Spent</th><th>Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${customers.map((customer) => `
+            <tr>
+              <td style="font-weight:600;">${customer.name}</td>
+              <td style="font-size:13px; color:var(--muted);">${customer.email}</td>
+              <td style="font-size:13px; color:var(--muted);">${customer.city}</td>
+              <td style="text-align:center;"><span style="background:rgba(201,168,76,0.1);color:var(--gold);padding:3px 10px;border-radius:3px;font-size:12px;">${customer.orders}</span></td>
+              <td style="font-weight:700; color:var(--gold);">₹${customer.spent.toLocaleString('en-IN')}</td>
+              <td style="font-size:12px; color:var(--muted);">${customer.joined}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+    }
+
+    function viewOrderDetails(orderId) {
+      // Find the order from state.orders (real orders only)
+      let order = state.orders.find(o => o.id === orderId);
+      
+      if (!order) {
+        showToast('Order not found', 'error');
+        return;
+      }
+
+      // Populate modal with order details
+      document.getElementById('orderDetailsId').textContent = `Order #${order.id} - ${order.date}`;
+      
+      document.getElementById('orderCustomerInfo').innerHTML = `
+        <strong>${order.userName || order.address?.name || 'Customer'}</strong><br>
+        ${order.userEmail || 'No email provided'}<br>
+        <strong>Phone:</strong> ${order.address?.mobile || 'Not provided'}
+      `;
+      
+      document.getElementById('orderAddressInfo').innerHTML = `
+        ${order.address?.name || 'N/A'}<br>
+        ${order.address?.line1 || 'N/A'}<br>
+        ${order.address?.line2 ? order.address.line2 + '<br>' : ''}
+        ${order.address?.city || 'N/A'}, ${order.address?.state || 'N/A'}<br>
+        <strong>PIN:</strong> ${order.address?.pincode || 'N/A'}
+      `;
+      
+      document.getElementById('orderItemsList').innerHTML = order.items.map(item => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:20px;">${item.emoji || '👗'}</span>
+            <div>
+              <div style="font-size:14px; font-weight:600;">${item.name}</div>
+              <div style="font-size:12px; color:var(--muted);">${[item.brand, item.size, item.condition].filter(Boolean).join(' · ') || 'Product details'}</div>
+            </div>
+          </div>
+          <div style="font-size:14px; color:var(--gold); font-weight:600;">₹${item.price.toLocaleString('en-IN')}</div>
+        </div>
+      `).join('');
+      
+      const paymentLabels = { cod: 'Cash on Delivery', upi: 'UPI Payment', card: 'Credit/Debit Card', netbanking: 'Net Banking' };
+      document.getElementById('orderPaymentInfo').innerHTML = `
+        <strong>Payment Method:</strong> ${paymentLabels[order.payment] || order.payment}<br>
+        <strong>Status:</strong> <span class="order-status status-${order.status.toLowerCase()}">${order.status}</span><br>
+        <strong>Order Date:</strong> ${order.date}
+      `;
+      
+      document.getElementById('orderSummaryInfo').innerHTML = `
+        <strong>Subtotal:</strong> ₹${(order.total - (order.delivery || 0)).toLocaleString('en-IN')}<br>
+        <strong>Delivery:</strong> ${order.delivery === 0 ? 'FREE' : `₹${order.delivery || 0}`}<br>
+        <strong style="color:var(--gold);">Total: ₹${order.total.toLocaleString('en-IN')}</strong>
+      `;
+      
+      // Set current status in dropdown
+      document.getElementById('orderStatusSelect').value = order.status;
+      
+      // Store current order ID for status updates
+      document.getElementById('orderStatusSelect').setAttribute('data-order-id', order.id);
+      
+      document.getElementById('orderDetailsModal').classList.add('open');
+    }
+
+    function closeOrderDetails() {
+      document.getElementById('orderDetailsModal').classList.remove('open');
+    }
+
+    async function updateOrderStatusFromModal() {
+      const orderId = document.getElementById('orderStatusSelect').getAttribute('data-order-id');
+      const newStatus = document.getElementById('orderStatusSelect').value;
+      await updateOrderStatus(orderId, newStatus);
+      // Refresh the current view without closing modal immediately
+      setTimeout(() => {
+        showTab('orders');
+      }, 100);
+    }
+
+    let selectedProductImages = [];
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Failed to read image'));
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderSelectedImages() {
+      const preview = document.getElementById('pImagesPreview');
+      const help = document.getElementById('pImagesHelp');
+      if (!preview || !help) return;
+
+      help.textContent = `Selected: ${selectedProductImages.length} image${selectedProductImages.length === 1 ? '' : 's'} (minimum 2). First image is used as thumbnail.`;
+
+      preview.innerHTML = (selectedProductImages || []).map((src, idx) => `
+        <div style="position:relative;">
+          <img src="${src}" alt="Product image ${idx + 1}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px; border:1px solid var(--border);">
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeSelectedImage(${idx})"
+            style="position:absolute; top:6px; right:6px; padding:4px 8px; border-radius:999px; font-size:11px;">
+            ×
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function removeSelectedImage(index) {
+      selectedProductImages.splice(index, 1);
+      renderSelectedImages();
+    }
+
+    document.getElementById('pImages')?.addEventListener('change', async (e) => {
+      const input = e.target;
+      const files = Array.from(input.files || []);
+      if (files.length === 0) return;
+
+      try {
+        const dataUrls = await Promise.all(files.map(readFileAsDataUrl));
+        selectedProductImages = [...selectedProductImages, ...dataUrls];
+        renderSelectedImages();
+        input.value = '';
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to load one or more images', 'error');
+      }
+    });
+
+    Promise.all([
+      (window.productsReady || Promise.resolve()),
+      (window.ordersReady || Promise.resolve()),
+    ]).then(() => {
+      adminProducts = [...PRODUCTS];
+      checkAdmin();
+    });
+  </script>
+</body>
+</html>

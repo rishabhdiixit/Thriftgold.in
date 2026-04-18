@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product — ThreadGold</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="navContainer"></div>
+  <div id="cartContainer"></div>
+  <div id="loginContainer"></div>
+  <div id="logoutContainer"></div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <main class="page-wrapper">
+    <div id="productBody"></div>
+  </main>
+
+  <!-- RELATED PRODUCTS -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-tag">✦ Similar Finds</div>
+        <h2 class="section-title">You May Also Like</h2>
+      </div>
+    </div>
+    <div class="product-grid" id="relatedGrid"></div>
+  </section>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../js/firebase.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    document.getElementById('navContainer').innerHTML = renderNav('shop');
+    document.getElementById('cartContainer').innerHTML = getCartHTML();
+    document.getElementById('loginContainer').innerHTML = getLoginModalHTML();
+    document.getElementById('logoutContainer').innerHTML = getLogoutModalHTML();
+
+    function renderProductPage() {
+      const id = parseInt(new URLSearchParams(window.location.search).get('id'));
+      const product = PRODUCTS.find(p => p.id === id);
+
+      if (!product) {
+        document.getElementById('productBody').innerHTML = `
+          <div class="empty-state" style="padding:120px 40px;">
+            <div class="empty-state-icon">😕</div>
+            <h3>Product not found</h3>
+            <p>This item may no longer be available</p>
+            <a href="shop.html" class="btn btn-gold">Back to Shop</a>
+          </div>`;
+        // Related products fallback
+        document.getElementById('relatedGrid').innerHTML = PRODUCTS.slice(0, 4).map(renderProductCard).join('');
+        updateCartUI();
+        return;
+      }
+
+      const savings = product.originalPrice - product.price;
+      const offPct = Math.round((savings / product.originalPrice) * 100);
+      document.title = `${product.name} — ThreadGold`;
+      const inWishlist = state.wishlist.includes(product.id);
+      const images = Array.isArray(product.images) ? product.images : [];
+      const primaryImage = images[0] || null;
+      const initialIndex = 0;
+
+      document.getElementById('productBody').innerHTML = `
+        <div style="padding:16px 48px; border-bottom:1px solid var(--border);">
+          <span style="font-size:13px; color:var(--muted);">
+            <a href="../index.html" style="color:var(--muted);">Home</a> /
+            <a href="shop.html" style="color:var(--muted);">Shop</a> /
+            <a href="shop.html?cat=${product.category}" style="color:var(--muted);">${product.category}</a> /
+            <span style="color:var(--cream);">${product.name}</span>
+          </span>
+        </div>
+        <div class="product-detail-layout">
+          <div>
+            ${
+              primaryImage
+                ? `
+                  <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="product-detail-img" style="padding:0; overflow:hidden; border:1px solid var(--border); position:relative; touch-action:pan-y;">
+                      <img id="mainProductImage" src="${primaryImage}" alt="${product.name}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                      ${
+                        images.length > 1
+                          ? `
+                            <button class="btn btn-dark" type="button" onclick="prevProductImage()" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); padding:10px 12px; border-radius:999px; background:rgba(10,10,10,0.65);">
+                              ‹
+                            </button>
+                            <button class="btn btn-dark" type="button" onclick="nextProductImage()" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); padding:10px 12px; border-radius:999px; background:rgba(10,10,10,0.65);">
+                              ›
+                            </button>
+                            <div id="productImageDots" style="position:absolute; left:0; right:0; bottom:12px; display:flex; justify-content:center; gap:8px;"></div>
+                          `
+                          : ''
+                      }
+                    </div>
+                    ${
+                      images.length > 1
+                        ? `<div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;">
+                            ${images.slice(0, 10).map((src, idx) => `
+                              <button class="btn btn-dark" type="button" style="padding:0; border-radius:12px; overflow:hidden; height:72px; border:1px solid var(--border); background:rgba(255,255,255,0.02);" onclick="setProductImage(${idx})">
+                                <img src="${src}" alt="${product.name}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                              </button>
+                            `).join('')}
+                          </div>`
+                        : ''
+                    }
+                  </div>
+                `
+                : `<div class="product-detail-img">${product.emoji || '👗'}</div>`
+            }
+          </div>
+          <div>
+            <div class="product-detail-brand">${product.brand}</div>
+            <h1 class="product-detail-name">${product.name}</h1>
+            <div class="product-detail-price">
+              <span class="price-current" style="font-size:36px;">₹${product.price.toLocaleString('en-IN')}</span>
+              <span class="price-original" style="font-size:18px;">₹${product.originalPrice.toLocaleString('en-IN')}</span>
+              <span class="price-off" style="font-size:14px; background:rgba(76,175,125,0.15); padding:4px 12px; border-radius:4px;">${offPct}% OFF</span>
+            </div>
+            <div class="product-detail-info">
+              <div class="info-box">
+                <div class="info-box-label">Size</div>
+                <div class="info-box-value">${product.size}</div>
+              </div>
+              <div class="info-box">
+                <div class="info-box-label">Condition</div>
+                <div class="info-box-value" style="color:var(--success);">● ${product.condition}</div>
+              </div>
+              <div class="info-box">
+                <div class="info-box-label">Category</div>
+                <div class="info-box-value">${product.category}</div>
+              </div>
+              <div class="info-box">
+                <div class="info-box-label">You Save</div>
+                <div class="info-box-value" style="color:var(--gold);">₹${savings.toLocaleString('en-IN')}</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:12px; margin-bottom:24px;">
+              <button class="btn btn-gold" style="flex:1; font-size:15px; padding:16px;" onclick="addToCart(${product.id}); openCart()">
+                🛍️ Add to Cart
+              </button>
+              <button class="btn btn-outline" style="padding:16px 20px;" onclick="toggleWishlist(${product.id}); this.textContent = state.wishlist.includes(${product.id}) ? '♥ Saved' : '♡ Save'">
+                ${inWishlist ? '♥ Saved' : '♡ Save'}
+              </button>
+            </div>
+
+            <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px;">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                <span style="font-size:20px;">🛡️</span>
+                <span style="font-weight:600;">ThreadGold Quality Guarantee</span>
+              </div>
+              <p style="font-size:13px; color:var(--muted); line-height:1.7;">
+                Every item is inspected, cleaned, and authenticated by our team before shipping.
+                7-day return policy if you're not satisfied.
+              </p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
+              <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted);">
+                <span>📦</span> Free delivery above ₹999
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted);">
+                <span>🔄</span> 7-day easy returns
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted);">
+                <span>💳</span> COD & Online Payment
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted);">
+                <span>✅</span> Authenticity verified
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Related products
+      const related = PRODUCTS.filter(p => p.id !== product.id && p.category === product.category).slice(0, 4);
+      document.getElementById('relatedGrid').innerHTML = (related.length > 0 ? related : PRODUCTS.slice(0, 4)).map(renderProductCard).join('');
+
+      // Swipe / arrow gallery
+      if (images.length > 1) {
+        let currentIndex = initialIndex;
+        const main = document.getElementById('mainProductImage');
+        const dots = document.getElementById('productImageDots');
+
+        function renderDots() {
+          if (!dots) return;
+          dots.innerHTML = images.map((_, idx) => `
+            <button type="button" class="btn btn-dark" onclick="setProductImage(${idx})"
+              style="width:10px; height:10px; padding:0; border-radius:999px; border:1px solid var(--border); background:${idx === currentIndex ? 'var(--gold)' : 'rgba(255,255,255,0.25)'};">
+            </button>
+          `).join('');
+        }
+
+        window.setProductImage = (idx) => {
+          const next = Math.max(0, Math.min(images.length - 1, idx));
+          currentIndex = next;
+          if (main) main.src = images[currentIndex];
+          renderDots();
+        };
+
+        window.nextProductImage = () => window.setProductImage(currentIndex + 1 >= images.length ? 0 : currentIndex + 1);
+        window.prevProductImage = () => window.setProductImage(currentIndex - 1 < 0 ? images.length - 1 : currentIndex - 1);
+
+        // Touch swipe
+        const swipeArea = main?.parentElement;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let swiping = false;
+
+        swipeArea?.addEventListener('touchstart', (e) => {
+          if (!e.touches?.[0]) return;
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          swiping = true;
+        }, { passive: true });
+
+        swipeArea?.addEventListener('touchmove', (e) => {
+          if (!swiping || !e.touches?.[0]) return;
+          const dx = e.touches[0].clientX - touchStartX;
+          const dy = e.touches[0].clientY - touchStartY;
+          if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 24) {
+            // horizontal gesture detected; keep page scroll usable by not calling preventDefault
+          }
+        }, { passive: true });
+
+        swipeArea?.addEventListener('touchend', (e) => {
+          if (!swiping) return;
+          swiping = false;
+          const endX = e.changedTouches?.[0]?.clientX ?? touchStartX;
+          const dx = endX - touchStartX;
+          if (Math.abs(dx) < 40) return;
+          if (dx < 0) window.nextProductImage();
+          else window.prevProductImage();
+        });
+
+        renderDots();
+        window.setProductImage(currentIndex);
+      }
+      updateCartUI();
+    }
+
+    (window.productsReady || Promise.resolve()).then(renderProductPage);
+  </script>
+</body>
+</html>

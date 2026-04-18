@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop - ThreadGold</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div id="navContainer"></div>
+  <div id="cartContainer"></div>
+  <div id="loginContainer"></div>
+  <div id="logoutContainer"></div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <main class="page-wrapper">
+    <div class="page-hero">
+      <div class="section-tag">Full Collection</div>
+      <h1>The <em style="font-style:italic; color:var(--gold);">Archive</em></h1>
+      <p id="productCount">Loading products...</p>
+    </div>
+
+    <div class="shop-layout">
+      <aside class="shop-filters">
+        <div style="margin-bottom:32px;">
+          <div class="section-tag" style="margin-bottom:16px;">Category</div>
+          <div id="catFilters" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        <div class="divider"></div>
+        <div style="margin-bottom:32px;">
+          <div class="section-tag" style="margin-bottom:16px;">Condition</div>
+          <div id="condFilters" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        <div class="divider"></div>
+        <div>
+          <div class="section-tag" style="margin-bottom:16px;">Price Range</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button class="filter-chip active" data-price-filter="all" onclick="setPriceFilter('all')">All Prices</button>
+            <button class="filter-chip" data-price-filter="under1k" onclick="setPriceFilter('under1k')">Under Rs 1,000</button>
+            <button class="filter-chip" data-price-filter="1k-2k" onclick="setPriceFilter('1k-2k')">Rs 1,000 - Rs 2,000</button>
+            <button class="filter-chip" data-price-filter="over2k" onclick="setPriceFilter('over2k')">Above Rs 2,000</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="shop-main">
+        <div class="shop-tools">
+          <div class="search-bar">
+            <span class="icon">🔍</span>
+            <input type="text" placeholder="Search products, brands..." id="searchInput" oninput="applyFilters()">
+          </div>
+          <div class="sort-group">
+            <span style="font-size:12px; color:var(--muted);">Sort by</span>
+            <select class="form-select" style="width:auto; padding:10px 14px;" id="sortSelect" onchange="applyFilters()">
+              <option value="default">Featured</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="discount">Biggest Discount</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="product-grid" id="shopGrid"></div>
+
+        <div id="emptyShop" class="empty-state hidden">
+          <div class="empty-state-icon">🔍</div>
+          <h3>No products found</h3>
+          <p>Try adjusting your filters or search term</p>
+          <button class="btn btn-gold" onclick="resetFilters()">Clear Filters</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="../js/firebase.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    document.getElementById('navContainer').innerHTML = renderNav('shop');
+    document.getElementById('cartContainer').innerHTML = getCartHTML();
+    document.getElementById('loginContainer').innerHTML = getLoginModalHTML();
+    document.getElementById('logoutContainer').innerHTML = getLogoutModalHTML();
+
+    let activeCategory = 'All';
+    let activeCondition = 'All';
+    let activePriceFilter = 'all';
+    let categories = ['All'];
+
+    function setCatFilter(category, button) {
+      activeCategory = category;
+      document.querySelectorAll('#catFilters .filter-chip').forEach((chip) => chip.classList.remove('active'));
+      button.classList.add('active');
+      applyFilters();
+    }
+
+    function setCondFilter(condition, button) {
+      activeCondition = condition;
+      document.querySelectorAll('#condFilters .filter-chip').forEach((chip) => chip.classList.remove('active'));
+      button.classList.add('active');
+      applyFilters();
+    }
+
+    function setPriceFilter(range) {
+      activePriceFilter = range;
+      document.querySelectorAll('[data-price-filter]').forEach((chip) => {
+        chip.classList.toggle('active', chip.dataset.priceFilter === range);
+      });
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const sort = document.getElementById('sortSelect').value;
+
+      const filtered = PRODUCTS.filter((product) => {
+        const matchCategory = activeCategory === 'All' || product.category === activeCategory;
+        const matchCondition = activeCondition === 'All' || product.condition === activeCondition;
+        const matchSearch = !search || product.name.toLowerCase().includes(search) || product.brand.toLowerCase().includes(search);
+
+        let matchPrice = true;
+        if (activePriceFilter === 'under1k') matchPrice = product.price < 1000;
+        if (activePriceFilter === '1k-2k') matchPrice = product.price >= 1000 && product.price <= 2000;
+        if (activePriceFilter === 'over2k') matchPrice = product.price > 2000;
+
+        return matchCategory && matchCondition && matchSearch && matchPrice;
+      }).slice();
+
+      if (sort === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+      if (sort === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+      if (sort === 'discount') filtered.sort((a, b) => (b.originalPrice - b.price) - (a.originalPrice - a.price));
+
+      document.getElementById('productCount').textContent = `${filtered.length} items available`;
+
+      const grid = document.getElementById('shopGrid');
+      const empty = document.getElementById('emptyShop');
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      grid.innerHTML = filtered.map(renderProductCard).join('');
+      empty.classList.add('hidden');
+    }
+
+    function resetFilters() {
+      activeCategory = 'All';
+      activeCondition = 'All';
+      activePriceFilter = 'all';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('sortSelect').value = 'default';
+      document.querySelectorAll('#catFilters .filter-chip').forEach((chip) => chip.classList.toggle('active', chip.textContent === 'All'));
+      document.querySelectorAll('#condFilters .filter-chip').forEach((chip) => chip.classList.toggle('active', chip.textContent === 'All'));
+      document.querySelectorAll('[data-price-filter]').forEach((chip) => chip.classList.toggle('active', chip.dataset.priceFilter === 'all'));
+      applyFilters();
+    }
+
+    function initFiltersUI() {
+      categories = ['All', ...new Set(PRODUCTS.map((product) => product.category))];
+      document.getElementById('catFilters').innerHTML = categories.map((category) => `
+        <button class="filter-chip ${category === 'All' ? 'active' : ''}" onclick="setCatFilter('${category}', this)">${category}</button>
+      `).join('');
+
+      const conditions = ['All', 'Like New', 'Excellent', 'Good'];
+      document.getElementById('condFilters').innerHTML = conditions.map((condition) => `
+        <button class="filter-chip ${condition === 'All' ? 'active' : ''}" onclick="setCondFilter('${condition}', this)">${condition}</button>
+      `).join('');
+
+      const urlCategory = new URLSearchParams(window.location.search).get('cat');
+      if (urlCategory && categories.includes(urlCategory)) {
+        activeCategory = urlCategory;
+        document.querySelectorAll('#catFilters .filter-chip').forEach((chip) => {
+          chip.classList.toggle('active', chip.textContent === urlCategory);
+        });
+      }
+
+      applyFilters();
+      updateCartUI();
+    }
+
+    (window.productsReady || Promise.resolve()).then(initFiltersUI);
+  </script>
+</body>
+</html>
